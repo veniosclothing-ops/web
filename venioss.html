@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Venios Clothing - Estilo Monocromático</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #ffffff; }
+        .section-container { min-height: calc(100vh - 80px); padding-top: 80px; }
+        .product-card { transition: transform 0.3s ease, box-shadow 0.3s ease; border: 1px solid #e5e5e5; position: relative; }
+        .product-card:hover { transform: translateY(-4px); box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1); }
+        .btn-primary { background-color: #000000; color: #ffffff; transition: background-color 0.3s ease, transform 0.1s ease; }
+        .btn-primary:hover { background-color: #333333; }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-primary:disabled { background-color: #a3a3a3; cursor: not-allowed; transform: none; }
+        .btn-secondary { background-color: #ffffff; color: #000000; border: 1px solid #000000; transition: background-color 0.3s ease; }
+        .btn-secondary:hover { background-color: #f0f0f0; }
+        .quantity-input { width: 50px; text-align: center; border: 1px solid #ccc; border-radius: 4px; }
+        .modal-content::-webkit-scrollbar { width: 8px; }
+        .modal-content::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        .whatsapp-float { position: fixed; bottom: 20px; right: 20px; background-color: #25D366; color: white; border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; box-shadow: 2px 2px 10px rgba(0,0,0,0.2); z-index: 100; transition: transform 0.3s ease; }
+        .whatsapp-float:hover { transform: scale(1.1); }
+        
+        /* Estilos para el slider de imágenes */
+        .image-slider { position: relative; width: 100%; height: 18rem; overflow: hidden; border-radius: 0.5rem; margin-bottom: 1rem; }
+        .slider-img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; transition: opacity 0.3s ease-in-out; }
+        .slider-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.7); border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; font-weight: bold; transition: background 0.2s; }
+        .slider-btn:hover { background: rgba(255,255,255,1); }
+        .slider-btn.prev { left: 10px; }
+        .slider-btn.next { right: 10px; }
+        .stock-badge { position: absolute; top: 10px; right: 10px; background-color: #ef4444; color: white; font-size: 0.75rem; font-weight: bold; padding: 4px 8px; border-radius: 4px; z-index: 20; }
+    </style>
+</head>
+<body>
+
+    <script>
+        /* BASE DE DATOS DE PRODUCTOS 
+           Actualizada con array de imágenes 'images' y estado de stock 'inStock'
+           
+           NOTA: Los productos con "//" al inicio están desactivados (ocultos).
+           Para activarlos, borra las dos barras "//" al comienzo de la línea.
+        */
+        const PRODUCTS = [
+            // --- CAMISAS OVERSIZE ($18) ---
+            { 
+                id: 1, 
+                name: 'Camisa Oversize "Blanco"', 
+                price: 18.00, 
+                // Añade aquí tus dos imágenes: [Frente, Espalda]
+                images: ['imagenes/camisa_blanca_1_frente.png', 'imagenes/camisa_blanca_1_espalda.png'], 
+                description: 'Diseño exclusivo en blanco puro. Algodón premium.', 
+                colors: ['Blanco'], 
+                sizes: ['S', 'M', 'L', 'XL'],
+                inStock: true // PRODUCTO DISPONIBLE
+            },
+            { 
+                id: 2, 
+                name: 'Camisa Oversize "Blanco"', 
+                price: 18.00, 
+                images: ['imagenes/camisa_blanca_2_frente.png', 'imagenes/camisa_blanca_2_espalda.png'], 
+                description: 'Corte amplio con estampado minimalista frontal.', 
+                colors: ['Blanco'], 
+                sizes: ['S', 'M', 'L', 'XL'],
+                inStock: true 
+            },
+            { 
+                id: 3, 
+                name: 'Camisa Oversize "Blanco"', 
+                price: 18.00, 
+                images: ['imagenes/camisa_blanca_3.png', 'imagenes/camisa_blanca_3_back.png'], 
+                description: 'Estilo urbano limpio, ideal para combinar.', 
+                colors: ['Blanco'], 
+                sizes: ['S', 'M', 'L', 'XL'],
+                inStock: true // DISPONIBLE
+            },
+            { 
+                id: 4, 
+                name: 'Camisa Oversize "Negro"', 
+                price: 18.00, 
+                images: ['imagenes/camisa_negra_1.png', 'imagenes/camisa_negra_1_back.png'], 
+                description: 'Negro profundo con diseño gráfico en espalda.', 
+                colors: ['Negro'], 
+                sizes: ['S', 'M', 'L', 'XL'],
+                inStock: true 
+            },
+            { 
+                id: 5, 
+                name: 'Camisa Oversize "Negro"', 
+                price: 18.00, 
+                images: ['imagenes/camisa_negra_2.png', 'imagenes/camisa_negra_2_back.png'], 
+                description: 'Textura suave y caída pesada. Diseño único.', 
+                colors: ['Negro'], 
+                sizes: ['S', 'M', 'L', 'XL'],
+                inStock: true 
+            },
+            { 
+                id: 6, 
+                name: 'Camisa Oversize "Negro"', 
+                price: 18.00, 
+                images: ['imagenes/camisa_negra_3.png', 'imagenes/camisa_negra_3_back.png'], 
+                description: 'Esencia callejera. Estampado lateral discreto.', 
+                colors: ['Negro'], 
+                sizes: ['S', 'M', 'L', 'XL'],
+                inStock: true 
+            },
+            { 
+                id: 7, 
+                name: 'Camisa Oversize "Negro"', 
+                price: 18.00, 
+                images: ['imagenes/camisa_negra_4.png', 'imagenes/camisa_negra_4_back.png'], 
+                description: 'Minimalismo total. Sin costuras visibles.', 
+                colors: ['Negro'], 
+                sizes: ['S', 'M', 'L', 'XL'],
+                inStock: true // DISPONIBLE
+            },
+
+            // --- SUÉTERES OVERSIZE ($22) ---
+            { 
+                id: 8, 
+                name: 'Suéter Oversize "negro"', 
+                price: 22.00, 
+                images: ['imagenes/sueter_negro_1.jpg', 'imagenes/sueter_negro_1_back.jpg'], 
+                description: 'Abrigo ligero con capucha amplia.', 
+                colors: ['Negro'], 
+                sizes: ['S', 'M', 'L', 'XL'],
+                inStock: true 
+            },
+            
+            // --- PRODUCTOS DESACTIVADOS / OCULTOS ---
+            // Para activarlos, quita las dos barras "//" al inicio de la línea
+            
+            // { id: 9, name: 'Suéter Oversize "Eclipse Hoodie"', price: 22.00, images: ['imagenes/sueter_negro_2.jpg', 'imagenes/sueter_negro_2_back.jpg'], description: 'Tejido térmico de alta calidad.', colors: ['Negro'], sizes: ['S', 'M', 'L', 'XL'], inStock: true },
+            
+            // { id: 10, name: 'Suéter Oversize "Dark Vibe"', price: 22.00, images: ['imagenes/sueter_negro_3.jpg', 'imagenes/sueter_negro_3_back.jpg'], description: 'Cuello redondo y puños ajustados.', colors: ['Negro'], sizes: ['S', 'M', 'L', 'XL'], inStock: true },
+            
+            { id: 11, name: 'Suéter Oversize "Beige"', price: 22.00, images: ['imagenes/sueter_beige_1.jpg', 'imagenes/sueter_beige_1_back.jpg'], description: 'Tono beige neutro para cualquier ocasión.', colors: ['Beige'], sizes: ['S', 'M', 'L', 'XL'], inStock: true },
+            
+            // { id: 12, name: 'Suéter Oversize "Cream Cloud"', price: 22.00, images: ['imagenes/sueter_beige_2.jpg', 'imagenes/sueter_beige_2_back.jpg'], description: 'Suavidad extrema en color crema/beige.', colors: ['Beige'], sizes: ['S', 'M', 'L', 'XL'], inStock: true },
+
+            // --- MONOS OVERSIZE ($25) ---
+            { id: 13, name: 'Mono Cargo "Negro"', price: 25.00, images: ['imagenes/mono_1.jpg', 'imagenes/mono_1_back.jpg'], description: 'Bolsillos múltiples y corte ancho.', colors: ['Negro'], sizes: ['S', 'M', 'L', 'XL'], inStock: true },
+            
+            // { id: 14, name: 'Mono Jogger "Relaxed 2"', price: 25.00, images: ['imagenes/mono_2.jpg', 'imagenes/mono_2_back.jpg'], description: 'Cintura elástica y tobillos libres.', colors: ['Gris Oscuro'], sizes: ['S', 'M', 'L', 'XL'], inStock: false },
+            
+            // { id: 15, name: 'Mono Oversize "Urban 3"', price: 25.00, images: ['imagenes/mono_3.jpg', 'imagenes/mono_3_back.jpg'], description: 'Tejido resistente para el día a día.', colors: ['Negro'], sizes: ['S', 'M', 'L', 'XL'], inStock: true },
+            
+            // { id: 16, name: 'Mono Táctico "Force 4"', price: 25.00, images: ['imagenes/mono_4.jpg', 'imagenes/mono_4_back.jpg'], description: 'Estilo técnico con detalles en cierres.', colors: ['Verde Oliva'], sizes: ['S', 'M', 'L', 'XL'], inStock: true }
+        ];
+
+        let cart = {};
+        const COMPANY_PHONE = "584249305395"; 
+        const DESTINATION_EMAIL = "veniosclothing@gmail.com";
+        let currentPosition = '';
+    </script>
+
+    <nav class="fixed top-0 left-0 w-full bg-white shadow-md z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center">
+            <div class="flex-shrink-0">
+                <a href="#" onclick="switchSection('home')" class="text-3xl font-extrabold text-black tracking-tighter hover:text-gray-700 transition duration-300">VENIOS</a>
+            </div>
+            <div class="hidden md:flex space-x-8 text-lg font-medium">
+                <button onclick="switchSection('home')" class="text-gray-900 hover:text-gray-600">Inicio</button>
+                <button onclick="switchSection('shop')" class="text-gray-900 hover:text-gray-600">Tienda</button>
+                <button onclick="switchSection('about')" class="text-gray-900 hover:text-gray-600">Sobre Nosotros</button>
+                <button onclick="switchSection('jobs')" class="text-gray-900 hover:text-gray-600">Trabaja con Nosotros</button>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="open-cart-button" class="relative p-2 rounded-full hover:bg-gray-100 transition duration-300">
+                    <svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    <span id="cart-count" class="absolute top-0 right-0 bg-black text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center -mt-1 -mr-1">0</span>
+                </button>
+                <button onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-full hover:bg-gray-100 transition duration-300">
+                    <svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden pb-2 space-y-1 bg-white border-t border-gray-200">
+            <button onclick="switchSection('home'); toggleMobileMenu();" class="block w-full text-left px-5 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Inicio</button>
+            <button onclick="switchSection('shop'); toggleMobileMenu();" class="block w-full text-left px-5 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Tienda</button>
+            <button onclick="switchSection('about'); toggleMobileMenu();" class="block w-full text-left px-5 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Sobre Nosotros</button>
+            <button onclick="switchSection('jobs'); toggleMobileMenu();" class="block w-full text-left px-5 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Trabaja con Nosotros</button>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <section id="home-section" class="section-container hidden">
+            <div class="text-center py-20 lg:py-40">
+                <h1 class="text-5xl sm:text-7xl font-bold tracking-tighter mb-4 text-gray-900">Diseño en Tonalidades Neutras</h1>
+                <p class="text-xl sm:text-2xl text-gray-600 mb-10 max-w-3xl mx-auto">Explora nuestra colección minimalista donde el blanco, negro y gris definen la elegancia atemporal.</p>
+                <button onclick="switchSection('shop')" class="btn-primary px-8 py-3 text-lg font-semibold rounded-full shadow-md hover:shadow-lg transition duration-300">Ver Colección</button>
+            </div>
+        </section>
+
+        <section id="shop-section" class="section-container hidden">
+            <h2 class="text-4xl font-bold text-center mb-10 mt-5 text-gray-900">Nuestros Productos</h2>
+            <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 pb-10"></div>
+        </section>
+
+        <section id="about-section" class="section-container hidden">
+            <div class="py-10">
+                <h2 class="text-4xl font-bold text-center mb-12 text-gray-900">Quiénes Somos</h2>
+                <div class="max-w-4xl mx-auto space-y-10">
+                    <div class="flex flex-col md:flex-row items-center bg-gray-50 p-6 rounded-xl shadow-lg">
+                        <div class="md:w-1/2 p-4">
+                            <h3 class="text-2xl font-semibold mb-3 text-gray-800">Orgullo Venezolano</h3>
+                            <p class="text-gray-600 leading-relaxed">
+                                <strong>Venios Clothing</strong> es una marca emergente de Venezuela que busca traer la máxima calidad en prendas y originalidad. Nacimos con la misión de redefinir el estilo urbano en Venezuela.
+                            </p>
+                        </div>
+                        <div class="md:w-1/2 mt-4 md:mt-0">
+                            <img src="imagenes/logo_venios.jpg" onerror="this.onerror=null; this.src='https://placehold.co/600x400/f3f4f6/1f2937?text=Sube+tu+Logo+a+imagenes/logo_venios.jpg'" alt="Logo Venios" class="rounded-lg shadow-md w-full">
+                        </div>
+                    </div>
+                    <div class="text-center pt-8 bg-black text-white p-10 rounded-xl shadow-2xl">
+                        <h3 class="text-3xl font-bold mb-3">"Viste bien, Viste con Venios"</h3>
+                        <p class="text-gray-300 max-w-2xl mx-auto">Nuestra filosofía se basa en la excelencia y el detalle. Únete a Venios, Viste bien con Venios.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="jobs-section" class="section-container hidden">
+            <div class="py-10">
+                <h2 class="text-4xl font-bold text-center mb-10 text-gray-900">Trabaja con Nosotros</h2>
+                <p class="text-xl text-center text-gray-600 mb-12 max-w-3xl mx-auto">
+                    Únete a Venios y forma parte de un equipo apasionado. Envía tu postulación directamente a nuestro equipo.
+                </p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                    
+                    <div class="bg-gray-50 p-6 rounded-xl shadow-lg hover:shadow-xl transition duration-300 border-l-4 border-black">
+                        <h3 class="text-2xl font-bold mb-3 text-gray-800">Costurero/a</h3>
+                        <p class="text-gray-600 mb-4">
+                            Buscamos expertos en confección para garantizar la máxima calidad.
+                        </p>
+                        <ul class="list-disc list-inside text-sm text-gray-500 mb-4 space-y-1">
+                            <li>Manejo de máquinas industriales.</li>
+                            <li>Atención al detalle y acabados finos.</li>
+                            <li>Experiencia en tejidos de algodón.</li>
+                        </ul>
+                        <button onclick="openApplicationModal('Costurero')" class="w-full btn-primary px-4 py-2 rounded-lg font-medium">
+                            Postular como Costurero
+                        </button>
+                    </div>
+
+                    <div class="bg-gray-50 p-6 rounded-xl shadow-lg hover:shadow-xl transition duration-300 border-l-4 border-gray-800">
+                        <h3 class="text-2xl font-bold mb-3 text-gray-800">Modelo</h3>
+                        <p class="text-gray-600 mb-4">
+                            Buscamos rostros frescos y actitud para representar nuestra estética minimalista.
+                        </p>
+                        <ul class="list-disc list-inside text-sm text-gray-500 mb-4 space-y-1">
+                            <li>Buena presencia y naturalidad.</li>
+                            <li>Disponibilidad para sesiones de fotos.</li>
+                            <li>Afinidad con el estilo urbano.</li>
+                        </ul>
+                        <button onclick="openApplicationModal('Modelo')" class="w-full btn-primary px-4 py-2 rounded-lg font-medium">
+                            Postular como Modelo
+                        </button>
+                    </div>
+
+                    <div class="bg-gray-50 p-6 rounded-xl shadow-lg hover:shadow-xl transition duration-300 border-l-4 border-gray-400">
+                        <h3 class="text-2xl font-bold mb-3 text-gray-800">Revendedor</h3>
+                        <p class="text-gray-600 mb-4">
+                            Únete como socio de ventas. Distribuye nuestra marca y gana comisiones.
+                        </p>
+                        <ul class="list-disc list-inside text-sm text-gray-500 mb-4 space-y-1">
+                            <li>Red de contactos establecida.</li>
+                            <li>Orientación al logro de metas.</li>
+                            <li>Ganancias por comisión.</li>
+                        </ul>
+                        <button onclick="openApplicationModal('Revendedor')" class="w-full btn-primary px-4 py-2 rounded-lg font-medium">
+                            Postular como Revendedor
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+        
+        <div id="application-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4" onclick="if(event.target.id === 'application-modal') closeApplicationModal()">
+            <div class="bg-white rounded-xl p-8 w-full max-w-xl modal-content shadow-2xl relative">
+                <button onclick="closeApplicationModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">✕</button>
+                <h3 id="app-modal-title" class="text-2xl font-bold mb-6 text-gray-900">Postulación</h3>
+                <form id="application-form" onsubmit="handleApplicationSubmit(event)">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <input type="text" id="app-name" placeholder="* Nombre Completo" required class="p-3 border border-gray-300 rounded-lg focus:ring-black focus:border-black">
+                        <input type="number" id="app-age" placeholder="* Edad" required min="18" max="99" class="p-3 border border-gray-300 rounded-lg focus:ring-black focus:border-black">
+                        <input type="email" id="app-email" placeholder="* Correo Electrónico" required class="p-3 border border-gray-300 rounded-lg focus:ring-black focus:border-black">
+                        <input type="tel" id="app-phone" placeholder="* Teléfono" required class="p-3 border border-gray-300 rounded-lg focus:ring-black focus:border-black">
+                        <input type="text" id="app-location" placeholder="* Ciudad de Residencia" required class="md:col-span-2 p-3 border border-gray-300 rounded-lg focus:ring-black focus:border-black">
+                    </div>
+                    <div id="position-specific-questions" class="space-y-4 mb-6 border-t pt-4"></div>
+                    <textarea id="app-message" rows="3" placeholder="Mensaje adicional (Opcional)" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-black focus:border-black mb-6"></textarea>
+                    <button type="submit" class="w-full btn-primary px-4 py-3 rounded-lg font-semibold text-lg">Enviar Postulación</button>
+                    <div id="modal-feedback" class="mt-4 p-3 hidden rounded-lg text-center"></div>
+                </form>
+            </div>
+        </div>
+
+        <div id="product-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4" onclick="if(event.target.id === 'product-modal') closeProductModal()">
+            <div class="bg-white rounded-xl p-6 w-full max-w-4xl modal-content shadow-2xl relative overflow-y-auto max-h-full">
+                <button onclick="closeProductModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 z-50">✕</button>
+                <div id="product-modal-content" class="grid grid-cols-1 lg:grid-cols-2 gap-8"></div>
+            </div>
+        </div>
+
+        <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4" onclick="if(event.target.id === 'cart-modal') closeCartModal()">
+            <div class="bg-white rounded-xl p-8 w-full max-w-2xl modal-content shadow-2xl relative overflow-y-auto max-h-full">
+                <button onclick="closeCartModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">✕</button>
+                <h3 class="text-3xl font-bold mb-6 text-gray-900 border-b pb-2">Tu Carrito</h3>
+                <div id="cart-items-container" class="space-y-4 mb-6"></div>
+                <div id="cart-summary" class="border-t pt-4 flex justify-between items-center text-xl font-bold mb-6">
+                    <span>Total:</span>
+                    <span id="cart-total">$0.00</span>
+                </div>
+
+                <div class="bg-gray-100 border-l-4 border-black p-4 mb-6 rounded">
+                    <h4 class="font-bold text-lg mb-2 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Pasos para completar tu compra:
+                    </h4>
+                    <ol class="list-decimal list-inside text-sm text-gray-700 space-y-2 mb-3">
+                        <li>Presiona <strong>"Generar Factura y Enviar"</strong>. Esto te llevará a WhatsApp con el detalle de tu pedido.</li>
+                        <li>Realiza el <strong>Pago Móvil</strong> con los datos bancarios de abajo.</li>
+                        <li>En el concepto/descripción del pago, escribe el <strong>CÓDIGO DE PEDIDO</strong> que se generará en el mensaje.</li>
+                        <li>Envía una <strong>captura de pantalla</strong> del pago al mismo chat de WhatsApp.</li>
+                    </ol>
+                    <div class="bg-white p-3 rounded border border-gray-300 font-mono text-sm">
+                        <p><strong>Banco:</strong> (0104) Banco Venezolano de Crédito</p>
+                        <p><strong>Teléfono:</strong> 0424-9305395</p>
+                        <p><strong>C.I.:</strong> 32.370.735</p>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                    <button onclick="checkout()" class="flex-1 btn-primary px-4 py-3 rounded-lg font-semibold text-lg shadow-lg hover:bg-green-600 transition-colors">
+                        Generar Factura y Enviar
+                    </button>
+                    <button onclick="closeCartModal()" class="flex-1 btn-secondary px-4 py-3 rounded-lg font-semibold text-lg">
+                        Seguir Comprando
+                    </button>
+                </div>
+                <div id="cart-feedback" class="mt-4 p-3 hidden rounded-lg text-center"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-black text-white py-8 mt-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-xl font-bold mb-2">VENIOS</p>
+            <p class="text-sm text-gray-400">© 2025 Venios Clothing. Venezuela.</p>
+        </div>
+    </footer>
+
+    <a href="https://wa.me/message/GXUT2KL4MU3OK1" target="_blank" class="whatsapp-float" title="Chat Soporte">
+        <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg>
+    </a>
+
+    <script>
+        // Lógica de Navegación
+        function switchSection(sectionId) {
+            ['home', 'shop', 'about', 'jobs'].forEach(id => {
+                const section = document.getElementById(`${id}-section`);
+                if(section) section.classList.add('hidden');
+            });
+            const target = document.getElementById(`${sectionId}-section`);
+            if(target) { target.classList.remove('hidden'); window.scrollTo({top:0, behavior:'smooth'}); }
+        }
+        function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
+
+        // Sonidos
+        function playSound(type) {
+            try {
+                if (Tone.context.state !== 'running') Tone.start();
+                let synth = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'sine' } }).toDestination();
+                if (type === 'add') synth.triggerAttackRelease(['C5', 'E5'], '8n');
+                else if (type === 'success') synth.triggerAttackRelease(['E5', 'G5', 'C6'], '4n');
+                else if (type === 'error') synth.triggerAttackRelease(['C4', 'B3'], '8n');
+                setTimeout(() => synth.dispose(), 500);
+            } catch (e) { console.error(e); }
+        }
+
+        // Lógica de Imagenes (Carrusel)
+        window.changeImage = function(productId, direction) {
+            const product = PRODUCTS.find(p => p.id === productId);
+            if (!product) return;
+            
+            const imgEl = document.getElementById(`img-${productId}`);
+            let currentIdx = parseInt(imgEl.dataset.index);
+            let newIdx = currentIdx + direction;
+            
+            // Loop entre imágenes
+            if (newIdx < 0) newIdx = product.images.length - 1;
+            if (newIdx >= product.images.length) newIdx = 0;
+            
+            imgEl.style.opacity = '0';
+            setTimeout(() => {
+                imgEl.src = product.images[newIdx] || `https://placehold.co/400x400/000000/ffffff?text=${product.name.replace(/ /g, '+')}+${newIdx === 0 ? 'Frente' : 'Atras'}`;
+                imgEl.dataset.index = newIdx;
+                imgEl.style.opacity = '1';
+            }, 150);
+        }
+        
+        // Modal Imagen Change
+        window.changeModalImage = function(productId, direction) {
+             const product = PRODUCTS.find(p => p.id === productId);
+            if (!product) return;
+            const imgEl = document.getElementById('modal-main-img');
+            let currentIdx = parseInt(imgEl.dataset.index);
+            let newIdx = currentIdx + direction;
+            
+             if (newIdx < 0) newIdx = product.images.length - 1;
+            if (newIdx >= product.images.length) newIdx = 0;
+            
+             imgEl.style.opacity = '0';
+            setTimeout(() => {
+                imgEl.src = product.images[newIdx] || `https://placehold.co/800x800/000000/ffffff?text=${product.name.replace(/ /g, '+')}+${newIdx === 0 ? 'Frente' : 'Atras'}`;
+                imgEl.dataset.index = newIdx;
+                imgEl.style.opacity = '1';
+            }, 150);
+        }
+
+        // Lógica de Productos y Modal
+        function renderProducts() {
+            const grid = document.getElementById('product-grid');
+            if (!grid) return;
+            grid.innerHTML = PRODUCTS.map(product => {
+                // Generar imágenes. Si no hay, usa placeholders
+                const mainImg = product.images[0] || `https://placehold.co/400x400/000000/ffffff?text=${product.name.replace(/ /g, '+')}`;
+                
+                // Botón deshabilitado si no hay stock
+                const btnState = product.inStock ? '' : 'disabled';
+                const btnText = product.inStock ? 'Ver Detalles' : 'Agotado';
+                const stockBadge = !product.inStock ? '<div class="stock-badge">AGOTADO</div>' : '';
+
+                return `
+                <div class="product-card bg-white rounded-xl overflow-hidden shadow-lg p-4 flex flex-col items-center text-center">
+                    ${stockBadge}
+                    <div class="image-slider group">
+                        <img id="img-${product.id}" src="${mainImg}" data-index="0"
+                             onerror="this.onerror=null; this.src='https://placehold.co/400x400/000000/ffffff?text=${product.name.replace(/ /g, '+')}'" 
+                             alt="${product.name}" class="slider-img">
+                        <div onclick="changeImage(${product.id}, -1)" class="slider-btn prev group-hover:opacity-100 opacity-0">&lt;</div>
+                        <div onclick="changeImage(${product.id}, 1)" class="slider-btn next group-hover:opacity-100 opacity-0">&gt;</div>
+                    </div>
+                    
+                    <h3 class="text-xl font-semibold text-gray-900">${product.name}</h3>
+                    <p class="text-2xl font-bold text-gray-800 my-2">$${product.price.toFixed(2)}</p>
+                    <button onclick="openProductModal(${product.id})" ${btnState} class="mt-3 w-full btn-primary px-4 py-2 rounded-lg font-medium">
+                        ${btnText}
+                    </button>
+                </div>
+            `}).join('');
+        }
+
+        function openProductModal(id) {
+            const product = PRODUCTS.find(p => p.id === id);
+            if (!product) return;
+            
+            // Si está agotado, no abre el modal o muestra mensaje (opcional, aqui bloqueamos el botón "añadir")
+            const isOutOfStock = !product.inStock;
+            
+            const modal = document.getElementById('product-modal');
+            const content = document.getElementById('product-modal-content');
+            
+            const colorOpts = product.colors.map(c => `<label class="inline-flex items-center mr-4"><input type="radio" name="color" value="${c}" required class="form-radio h-4 w-4 text-black" checked><span class="ml-2 text-gray-700">${c}</span></label>`).join('');
+            const sizeOpts = product.sizes.map(s => `<label class="inline-flex items-center mr-4"><input type="radio" name="size" value="${s}" required class="form-radio h-4 w-4 text-black" checked><span class="ml-2 text-gray-700">${s}</span></label>`).join('');
+            
+            const mainImg = product.images[0] || `https://placehold.co/800x800/000000/ffffff?text=${product.name.replace(/ /g, '+')}`;
+
+            const submitBtn = isOutOfStock 
+                ? `<button type="button" disabled class="w-full btn-primary px-6 py-3 text-lg font-semibold rounded-lg opacity-50 cursor-not-allowed">Producto Agotado</button>`
+                : `<button type="submit" class="w-full btn-primary px-6 py-3 text-lg font-semibold rounded-lg">Añadir al Carrito</button>`;
+
+            content.innerHTML = `
+                <div class="lg:sticky lg:top-0 relative">
+                     <div class="relative w-full h-auto rounded-xl shadow-md overflow-hidden">
+                        <img id="modal-main-img" data-index="0" src="${mainImg}" onerror="this.onerror=null; this.src='https://placehold.co/800x800/000000/ffffff?text=Imagen'" class="w-full h-auto object-cover transition-opacity duration-300">
+                        <div onclick="changeModalImage(${product.id}, -1)" class="slider-btn prev" style="opacity: 1; left: 20px;">&lt;</div>
+                        <div onclick="changeModalImage(${product.id}, 1)" class="slider-btn next" style="opacity: 1; right: 20px;">&gt;</div>
+                     </div>
+                </div>
+                <div>
+                    <h4 class="text-3xl font-bold text-gray-900 mb-2">${product.name} ${isOutOfStock ? '<span class="text-red-500 text-lg">(Agotado)</span>' : ''}</h4>
+                    <p class="text-4xl font-extrabold text-black mb-4">$${product.price.toFixed(2)}</p>
+                    <p class="text-gray-600 mb-6">${product.description}</p>
+                    <form id="add-to-cart-form">
+                        <div class="mb-5"><label class="block text-lg font-medium text-gray-800 mb-2">Color:</label><div class="flex flex-wrap">${colorOpts}</div></div>
+                        <div class="mb-5"><label class="block text-lg font-medium text-gray-800 mb-2">Talla:</label><div class="flex flex-wrap">${sizeOpts}</div></div>
+                        <div class="flex items-center space-x-4 mb-6"><label class="text-lg font-medium text-gray-800">Cantidad:</label><input type="number" id="qty-${product.id}" value="1" min="1" max="10" ${isOutOfStock ? 'disabled' : ''} required class="quantity-input p-2 rounded-lg border-gray-400"></div>
+                        ${submitBtn}
+                    </form>
+                </div>`;
+
+            if (!isOutOfStock) {
+                document.getElementById('add-to-cart-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const form = e.target;
+                    const color = form.querySelector('input[name="color"]:checked').value;
+                    const size = form.querySelector('input[name="size"]:checked').value;
+                    const qty = parseInt(document.getElementById(`qty-${product.id}`).value);
+                    addToCart(product, qty, color, size);
+                    closeProductModal();
+                });
+            }
+            modal.classList.remove('hidden');
+        }
+        function closeProductModal() { document.getElementById('product-modal').classList.add('hidden'); }
+
+        // Lógica de Carrito
+        function addToCart(product, qty, color, size) {
+            const key = `${product.id}-${color}-${size}`;
+            if(cart[key]) cart[key].quantity += qty;
+            else cart[key] = { product, quantity: qty, color, size };
+            updateCartTotal();
+            playSound('add');
+        }
+        function removeFromCart(key) { delete cart[key]; updateCartTotal(); renderCartItems(); }
+        function updateCartQuantity(key, val) {
+            const q = parseInt(val);
+            if(q > 0 && cart[key]) cart[key].quantity = q;
+            else if(q === 0) removeFromCart(key);
+            renderCartItems();
+        }
+        function updateCartTotal() {
+            let t = 0, c = 0;
+            Object.keys(cart).forEach(k => { t += cart[k].product.price * cart[k].quantity; c += cart[k].quantity; });
+            const count = document.getElementById('cart-count'); if(count) count.textContent = c;
+            const total = document.getElementById('cart-total'); if(total) total.textContent = `$${t.toFixed(2)}`;
+        }
+        function renderCartItems() {
+            const container = document.getElementById('cart-items-container');
+            const keys = Object.keys(cart);
+            if(keys.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500">Tu carrito está vacío.</p>';
+                document.getElementById('cart-total').textContent = '$0.00';
+                return;
+            }
+            container.innerHTML = keys.map(k => {
+                const i = cart[k];
+                // Usar primera imagen para el carrito
+                const cartImg = i.product.images[0] || i.product.image; 
+                return `<div class="flex items-center border-b pb-3 pt-3">
+                    <img src="${cartImg}" onerror="this.onerror=null; this.src='https://placehold.co/80x80/f0f0f0/000000?text=Item'" class="w-16 h-16 object-cover rounded-md mr-4">
+                    <div class="flex-1"><p class="font-semibold">${i.product.name}</p><p class="text-sm text-gray-600">${i.color} / ${i.size}</p><p class="text-sm">$${i.product.price.toFixed(2)}</p></div>
+                    <div class="flex flex-col items-end"><input type="number" value="${i.quantity}" min="1" onchange="updateCartQuantity('${k}', this.value)" class="quantity-input p-1 mb-2"><button onclick="removeFromCart('${k}')" class="text-red-500 text-sm">Eliminar</button></div>
+                </div>`;
+            }).join('');
+            updateCartTotal();
+        }
+        function openCartModal() { renderCartItems(); document.getElementById('cart-modal').classList.remove('hidden'); }
+        function closeCartModal() { document.getElementById('cart-modal').classList.add('hidden'); }
+
+        /* --- LOGICA DE CHECKOUT (FACTURA Y WHATSAPP) --- */
+        function checkout() {
+            const keys = Object.keys(cart);
+            if (keys.length === 0) {
+                showMessage('El carrito está vacío.', 'error', 'cart-feedback');
+                playSound('error');
+                return;
+            }
+
+            // 1. Generar Código de Factura Único
+            const orderId = 'VEN-' + Math.floor(Math.random() * 100000);
+            let total = 0;
+            
+            // 2. Construir Mensaje de Factura
+            let message = `*NUEVO PEDIDO VENIOS CLOTHING*\n`;
+            message += `-----------------------------\n`;
+            message += `*Código de Factura:* ${orderId}\n`;
+            message += `-----------------------------\n\n`;
+            message += `*Detalle del Pedido:*\n`;
+
+            keys.forEach(key => {
+                const item = cart[key];
+                const subtotal = item.product.price * item.quantity;
+                total += subtotal;
+                message += `• (${item.quantity}) ${item.product.name}\n`;
+                message += `   Color: ${item.color} | Talla: ${item.size}\n`;
+                message += `   Subtotal: $${subtotal.toFixed(2)}\n\n`;
+            });
+
+            message += `-----------------------------\n`;
+            message += `*TOTAL A PAGAR: $${total.toFixed(2)}*\n`;
+            message += `-----------------------------\n`;
+            message += `\n*Instrucciones:*\n`;
+            message += `1. Ya generé mi factura.\n`;
+            message += `2. Adjuntaré el capture del Pago Móvil a este chat.\n`;
+            message += `3. El pago incluye el código: ${orderId} en la descripción.`;
+
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappUrl = `https://wa.me/${584167824788}?text=${encodedMessage}`;
+
+            showMessage(`Factura ${orderId} generada. Abriendo WhatsApp... Recuerda enviar el capture.`, 'success', 'cart-feedback');
+            playSound('success');
+            
+            setTimeout(() => {
+                window.open(whatsappUrl, '_blank');
+                cart = {};
+                updateCartTotal();
+                renderCartItems();
+                setTimeout(closeCartModal, 2000);
+            }, 1500);
+        }
+
+        function showMessage(msg, type, id) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.className = `mt-4 p-3 rounded-lg text-center ${type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 6000);
+        }
+
+        /* --- LOGICA DE POSTULACIONES (Jobs) --- */
+        const positionQuestions = {
+            'Costurero': [
+                { id: 'app-experience', type: 'textarea', placeholder: '* Describe tu experiencia en confección y tipos de tela (mín 50 palabras)', required: true },
+                { id: 'app-machinery', type: 'text', placeholder: '* ¿Qué máquinas industriales manejas? (Ej: Recta, Overlock)', required: true }
+            ],
+            'Modelo': [
+                { id: 'app-height-size', type: 'text', placeholder: '* Estatura y Tallas (Ej: 1.75m, Camisa M, Pantalón 32)', required: true },
+                { id: 'app-instagram', type: 'text', placeholder: '* Link a Instagram o Portafolio (Book)', required: true },
+                { id: 'app-experience', type: 'textarea', placeholder: 'Breve descripción de experiencia previa (Opcional)', required: false }
+            ],
+            'Revendedor': [
+                { id: 'app-experience', type: 'textarea', placeholder: '* Experiencia en ventas y distribución', required: true },
+                { id: 'app-monthly-goal', type: 'text', placeholder: '* Meta de ventas mensual estimada', required: true },
+                { id: 'app-strategy', type: 'textarea', placeholder: '* Estrategia de venta', required: true },
+                { id: 'app-platform', type: 'text', placeholder: 'Plataforma principal (Ej: Tienda Física, Instagram)', required: false }
+            ]
+        };
+
+        function openApplicationModal(pos) {
+            currentPosition = pos;
+            document.getElementById('app-modal-title').textContent = `Postulación: ${pos}`;
+            const container = document.getElementById('position-specific-questions');
+            const questions = positionQuestions[pos] || [];
+            container.innerHTML = '';
+            questions.forEach(q => {
+                const req = q.required ? 'required' : '';
+                container.innerHTML += q.type === 'textarea' 
+                    ? `<textarea id="${q.id}" rows="3" placeholder="${q.placeholder}" ${req} class="w-full p-3 border border-gray-300 rounded-lg focus:ring-black"></textarea>`
+                    : `<input type="${q.type}" id="${q.id}" placeholder="${q.placeholder}" ${req} class="w-full p-3 border border-gray-300 rounded-lg focus:ring-black">`;
+            });
+            document.getElementById('application-modal').classList.remove('hidden');
+        }
+        function closeApplicationModal() { document.getElementById('application-modal').classList.add('hidden'); document.getElementById('application-form').reset(); }
+
+        function handleApplicationSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('app-name').value;
+            
+            // Capturar datos dinámicos para console log
+            let dynamicData = "";
+            if (currentPosition === 'Costurero') {
+                dynamicData = `Exp: ${document.getElementById('app-experience').value}, Maq: ${document.getElementById('app-machinery').value}`;
+            } else if (currentPosition === 'Modelo') {
+                dynamicData = `Tallas: ${document.getElementById('app-height-size').value}, IG: ${document.getElementById('app-instagram').value}`;
+            } else if (currentPosition === 'Revendedor') {
+                dynamicData = `Meta: ${document.getElementById('app-monthly-goal').value}, Estrategia: ${document.getElementById('app-strategy').value}`;
+            }
+
+            console.log(`ENVIANDO A: ${DESTINATION_EMAIL} | Postulante: ${name} para ${currentPosition} | Datos: ${dynamicData}`);
+            
+            showMessage('Postulación enviada con éxito. Revisaremos tu solicitud.', 'success', 'modal-feedback');
+            playSound('success');
+            setTimeout(closeApplicationModal, 3000);
+        }
+
+        window.onload = () => {
+            renderProducts();
+            switchSection('home');
+            updateCartTotal();
+            document.getElementById('open-cart-button').addEventListener('click', openCartModal);
+        };
+    </script>
+</body>
+</html>
